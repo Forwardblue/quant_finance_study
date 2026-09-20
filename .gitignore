@@ -21,3 +21,7 @@ dist/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# ---- Claude Code ----
+# 本地权限配置，只对这台机器有效，和 .idea/ 一个道理
+.claude/

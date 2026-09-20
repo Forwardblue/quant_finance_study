@@ -11,12 +11,15 @@ prices = pd.Series(
 )
 
 # 2. 算 SMA5：窗口为 5 的简单移动平均
-sma5 = prices.rolling(window=5).mean().round(2)
+sma5 = prices.rolling(window=5,min_periods=1).mean().round(1)
 
 # 3. 拼成表格打印
 df = pd.DataFrame({"price": prices, "SMA5": sma5})
+print(prices)
+print(sma5)
 print(df)
 
-# 前 4 个是 NaN，因为凑不满 5 个价格。
-# 想让它们也有值，就加 min_periods=1：
-# prices.rolling(window=5, min_periods=1).mean()
+# 注意：上面用了 min_periods=1，意思是数据不够 5 个也照算，
+# 所以前 4 行的 SMA5 其实只是前 1~4 个价格的平均，不算真正的 5 日均线。
+# 如果想让它变回 NaN（诚实地表示「数据不够」），去掉 min_periods=1 就行：
+# prices.rolling(window=5).mean()
