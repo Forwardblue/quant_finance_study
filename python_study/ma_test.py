@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from pathlib import Path
 # ================================================================
 # 第一部分：算指标 —— 这一段每一行都要懂
 # ================================================================
@@ -53,6 +53,6 @@ ax.set_ylabel("price")
 ax.grid(alpha=0.3)              # 淡网格，纯粹为了好看，删掉不影响结果
 
 fig.tight_layout()              # 别让标题被裁掉
-from pathlib import Path
+
 fig.savefig(Path(__file__).with_name("ma.png"))
 plt.show()                      # 弹窗显示
