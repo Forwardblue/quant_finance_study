@@ -1,0 +1,23 @@
+# ---- IDE ----
+# PyCharm / IntelliJ 的工程配置，每人本地不一样，不入库
+.idea/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 打包 / 分发产物
+build/
+dist/
+*.egg-info/
+
+# 测试与类型检查缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
