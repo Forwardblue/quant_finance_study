@@ -6,11 +6,17 @@ from pathlib import Path
 # 第一部分：算指标 —— 这一段每一行都要懂
 # ================================================================
 
-# 1. 造 100 个价格（固定种子，保证每次运行结果一样）
+# 1. 造 500 个价格：算术随机游走（固定种子，保证每次运行结果一样）
+#    和上一版的区别：uniform 是每天都独立抽签，价格之间毫无关系；
+#    随机游走是「今天 = 昨天 + 一个随机增量」，所以价格会连着走、走出一段"趋势"。
+#    但增量本身每天独立、均值为 0 —— 走出去的那段趋势纯属偶然，不是行情有方向。
+#    这就是后面能说「均线不预测方向」的由来。
 rng = np.random.default_rng(seed=42)
+steps = rng.normal(loc=0.0, scale=1.0, size=500)   # 每日增量：均值 0、标准差 1 元
+steps[0] = 0.0                                     # 第一天不动，起点正好是 100
 prices = pd.Series(
-    rng.uniform(90, 110, size=100).round(2),         # 90~110 之间取 100 个数
-    index=pd.date_range("2026-01-01", periods=100, freq="D"),
+    (100 + np.cumsum(steps)).round(2),             # cumsum = 逐日累加，这就是"游走"
+    index=pd.date_range("2026-01-01", periods=500, freq="D"),
     name="price",
 )
 
@@ -32,10 +38,9 @@ sma60 = prices.rolling(window=60).mean().round(1)
 
 # 5. 打印对比表
 df = pd.DataFrame({"price": prices, "SMA5": sma5, "EMA5": ema5, "MA20": sma20, "MA60": sma60})
-#    100 行超过了 pandas 默认的显示上限（60 行），不设这一句，中间会被折叠成 "..."。
-#    设成 None = 不限行数，全打出来。
-pd.set_option("display.max_rows", None)
-print(df)
+#    500 行不打了 —— 刷屏看不出东西。真正要盯的是尾部：
+#    那是 MA5 / MA20 / MA60 全都算得出值的区间，方便直接比谁更贴价格、谁更滞后。
+print(df.tail(10))
 
 # 6. 手写循环再算一遍 EMA，和 pandas 对拍 —— 证明自己真懂 α 在干什么
 #    注意：每步都拿「没取整」的值往下递推，只在最后 round。
@@ -46,7 +51,33 @@ for p in prices.iloc[1:]:
     ema_manual.append(alpha * p + (1 - alpha) * ema_manual[-1])
 ema_manual = pd.Series(ema_manual, index=prices.index).round(1)
 
-print("两种算法完全一致:", ema_manual.equals(ema5))
+print("EMA 两种算法完全一致:", ema_manual.equals(ema5))
+
+# 7. 手写循环再累加一遍价格，和 np.cumsum 对拍 —— 同一个套路，换个地方再用一次
+#    第 6 步是「一行 ewm   vs  手写递推」，这一步是「一行 cumsum  vs  手写累加」。
+#    两次都在说明同一件事：库函数不是魔法，拆开就是一个循环。
+#    种子和参数跟第 1 步保持一致，所以算出来必须和 prices 一模一样。
+rng = np.random.default_rng(seed=42)
+steps = rng.normal(loc=0.0, scale=1.0, size=500)
+steps[0] = 0.0
+
+# 手写累加，替代 np.cumsum
+# 注意：和上面的 EMA 一样，循环里不 round，只在最后 round 一次。
+#      中间每步取整的话，累加 500 次误差一样会滚雪球。
+cumulative = []
+total = 0.0
+for s in steps:
+    total += s
+    cumulative.append(total)
+
+# 加上初始价格 100
+prices_manual = pd.Series(
+    (100 + np.array(cumulative)).round(2),
+    index=pd.date_range("2026-01-01", periods=500, freq="D"),
+    name="price",
+)
+
+print("价格两种算法完全一致:", prices_manual.equals(prices))
 
 # ================================================================
 # 第二部分：画图 —— 核心只有下面 5 行 plot，其它都是可删的外观
@@ -55,7 +86,7 @@ print("两种算法完全一致:", ema_manual.equals(ema5))
 fig, ax = plt.subplots(figsize=(10, 5))       # 画布大小，10×5 英寸
 
 ax.plot(prices, label="price")                # ← 核心：把五条线画上去
-ax.plot(sma5, label="SMA5")                   #    100 个点不画 marker，不然圆圈糊成一片
+ax.plot(sma5, label="SMA5")                   #    不画 marker，500 个点会糊成一片
 ax.plot(ema5, label="EMA5")
 ax.plot(sma20, label="MA20")
 ax.plot(sma60, label="MA60")
@@ -64,7 +95,7 @@ ax.legend()                     # 图例 —— 不加就分不清哪条是哪�
 ax.set_title("price - SMA5 - EMA5 - MA20 - MA60")
 ax.set_ylabel("price")
 ax.grid(alpha=0.3)              # 淡网格，纯粹为了好看，删掉不影响结果
-ax.tick_params(axis="x", rotation=45)   # 100 个日期横着排会挤，转 45 度纯属好看
+ax.tick_params(axis="x", rotation=45)   # 500 个日期横着排会挤，转 45 度纯属好看
 
 fig.tight_layout()              # 别让标题被裁掉
 
