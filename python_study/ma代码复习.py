@@ -18,3 +18,5 @@ ema5 = prices.ewm(span=5,adjust=False).mean()
 
 ma20=prices.rolling(window=20).mean()
 ma60=prices.rolling(window=60).mean()
+
+df = pd.DataFrame({"prices":prices,})
