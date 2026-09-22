@@ -89,14 +89,15 @@ print("价格两种算法完全一致:", prices_manual.equals(prices))
 #   想要"不够就留 NaN"那版（真实窗口），把 max 去掉、改成 i < 4 时 append(np.nan) 即可。
 manual_raw = []
 for i in range(len(prices)):
-    manual_raw.append(prices.iloc[max(0, i - 4): i + 1].mean())
+    manual_raw.append(prices.iloc[max(0, i - 4): i + 1].mean())  # 这里的iloc遵循左闭右开，所以会取到i+1
 manual_raw = pd.Series(manual_raw, index=prices.index)
 
 # 只在最后 round 一次 —— 和第 6、7 步同一条规矩
 sma5_manual = manual_raw.round(1)
 sma5_raw = prices.rolling(window=5, min_periods=1).mean()   # 不取整的 pandas 版，用来对拍
 
-print("SMA 两种算法完全一致（.equals） :", sma5_manual.equals(sma5))
+print("SMA 两种算法完全一致（.equals） :", sma5_manual
+      .equals(sma5))
 print("SMA 两种算法完全一致（allclose）:", np.allclose(manual_raw, sma5_raw))
 
 # ----------------------------------------------------------------
