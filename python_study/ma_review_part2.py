@@ -36,6 +36,14 @@ prices2 = pd.Series(
 
 print('随机行走的两种方法结果是否相等：',prices.equals(prices2))
 
-#sma的逻辑展开
+# sma的逻辑展开
+sma = prices.rolling(window=5, min_periods=1).mean().round(2)
 
+# 现在是prices已经解决，目的是要展开滚动窗口的算法，选取最近五个周期的价格，加和平均，就可以得到sma5
+manual = []
+for s in range(len(prices)):
+    manual.append(prices.iloc[max(0,s-4):s+1].mean())
 
+# 目前manual还只是列表，要转成和prices一样的格式
+sma2 = pd.Series(manual, index=prices.index).round(2)
+print('sma5的两种方法结果是否相等：',np.allclose(sma2,sma))  # 记得四舍五入，而且要用allclose，不然很难得到TRUE
