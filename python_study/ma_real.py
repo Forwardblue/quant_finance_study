@@ -23,7 +23,7 @@ ax.plot(ma20, label='ma20')
 ax.plot(ma60, label='ma60')
 
 ax.legend()
-ax.set_title("real_prices")
+ax.set_title("Kweichow Moutai 600519 qfq + MA5/20/60")
 
 fig.savefig(Path(__file__).with_name("ma_real.png"))
 plt.show()
@@ -31,4 +31,3 @@ plt.show()
 print(ma5.head())
 # 原来是索引没整好,少了一步把日期作为整个df的索引
 # df = df.set_index('date')把这个补到前面去
-
