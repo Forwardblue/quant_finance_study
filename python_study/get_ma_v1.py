@@ -1,7 +1,7 @@
 import pandas as pd
 import akshare as ak
 import datetime
-
+from pathlib import Path
 # 假设股票代码是code
 
 
@@ -14,18 +14,21 @@ def get_df(code):
     )
     df['date'] = pd.to_datetime(df['date'])
     df = df.set_index('date')
+    csv_path = Path(__file__).with_name("sh600519_qfq.csv")
+    df.to_csv(csv_path, index=False)
+    print(f"{code}本地缓存成功")
     return df
 
 
-def ma(df,n):
+def ma(df, n):
     return df['close'].rolling(window=n).mean()
 
 
 def get_ma(code):
     df = get_df(code)
-    ma5 = ma(5,df)
-    ma20 = ma(20,df)
-    ma60 = ma(60,df)
+    ma5 = ma(df, 5)
+    ma20 = ma(df, 20)
+    ma60 = ma(df, 60)
 
     df1 = pd.DataFrame({
         'close': df['close'],
