@@ -17,7 +17,7 @@ def get_df(code):
     return df
 
 
-def ma(n,df):
+def ma(df,n):
     return df['close'].rolling(window=n).mean()
 
 
