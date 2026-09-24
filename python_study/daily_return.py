@@ -24,7 +24,7 @@ for i in range(len(df["close"])):
     daily_return.append(daily_return_rate)
 print(daily_return)
 
-daily_return_series = pd.Series(daily_return)
+daily_return_series = pd.Series(daily_return, index=df.index)
 print(daily_return_series.head())
 
 # 然后加到df上去，这里好像只是按行数匹配的，df读出来也是按行数取的，所以我应该规范的话，在最前面应该加一个按日期排序
