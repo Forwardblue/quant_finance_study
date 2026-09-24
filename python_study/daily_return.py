@@ -4,6 +4,8 @@
 # 差不多了，数学原理基本是一眼可知，重要的是用代码写出来
 from pathlib import Path
 import pandas as pd
+from matplotlib import pyplot as plt
+
 # 第一步，取数，直接从缓存里取
 code = "sh600519"
 adjust = "qfq"
@@ -27,12 +29,24 @@ print(daily_return_series)
 df["daily_return"] = daily_return_series
 print(df["daily_return"])
 
-
-
-#另外的方法，更简便一些
+# 另外的方法，更简便一些
 daily_return = df["close"].pct_change()
 df["daily_return"] = daily_return
 print(df["daily_return"])
 
 # 两种算法算出来不对，是哪里错了
 # 第一天的数据错了，第一种方法本来前一天没有数据，它把最后一天当成第一天的前一天了，所以会出现数据，而不是直接nan
+
+# 还有画出来的一步
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(df["daily_return"])
+ax.set_title("daily_return")
+fig.savefig(Path(__file__).with_name("daily_return.png"))
+plt.show()
+
+
+
+
+
+
+
