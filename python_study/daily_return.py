@@ -46,10 +46,36 @@ ax.plot(df["daily_return"])
 ax.set_title("daily_return")
 fig.savefig(Path(__file__).with_name("daily_return.png"))
 plt.show()
+plt.close(fig)
 
+# 计算累计收益
+cumulative_return = []
 
+for i in range(len(df["daily_return"])):
+    if i == 0:
+        cumulative_return.append(1)
+    else:
+        cumulative_return.append((1 + df["daily_return"].iloc[i])*cumulative_return[i-1])
 
+# 到这一步就已经算出完整的list：cumulative_return
+# 然后将其转为series，并合到原来的df上，基本是套用的日收益率的那段代码了
+df["cumulative_return"] = cumulative_return
+print(df["cumulative_return"].head())
 
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(df["cumulative_return"])
+ax.set_title("cumulative_return")
+fig.savefig(Path(__file__).with_name("cumulative_return.png"))
+plt.show()
+plt.close(fig)
+# 这里存在的问题是我得关闭掉dailireturn的图，才能跳出cumulative_return的图，无伤大雅
+# 来看看简便的函数算法吧
+df['nav'] = (1 + df['daily_return'].fillna(0)).cumprod()
+print(df["nav"].head())
 
-
-
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(df["nav"])
+ax.set_title("nav")
+fig.savefig(Path(__file__).with_name("nav.png"))
+plt.show()
+plt.close(fig)
