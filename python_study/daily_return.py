@@ -5,6 +5,7 @@
 from pathlib import Path
 import pandas as pd
 from matplotlib import pyplot as plt
+import math
 
 # 第一步，取数，直接从缓存里取
 code = "sh600519"
@@ -59,7 +60,7 @@ for i in range(len(df["daily_return"])):
 
 # 到这一步就已经算出完整的list：cumulative_return
 # 然后将其转为series，并合到原来的df上，基本是套用的日收益率的那段代码了
-df["cumulative_return"] = cumulative_return
+df["cumulative_return"] = cumulative_return  # list 按位置赋值，长度不匹配会报错；和 Series 按标签对齐是两条不同的路
 print(df["cumulative_return"].head())
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -68,7 +69,7 @@ ax.set_title("cumulative_return")
 fig.savefig(Path(__file__).with_name("cumulative_return.png"))
 plt.show()
 plt.close(fig)
-# 这里存在的问题是我得关闭掉dailireturn的图，才能跳出cumulative_return的图，无伤大雅
+
 # 来看看简便的函数算法吧
 df['nav'] = (1 + df['daily_return'].fillna(0)).cumprod()
 print(df["nav"].head())
@@ -77,5 +78,21 @@ fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(df["nav"])
 ax.set_title("nav")
 fig.savefig(Path(__file__).with_name("nav.png"))
+plt.show()
+plt.close(fig)
+
+# 这里开始算波动率,并做了年化
+df["20sigma"] = df["daily_return"].rolling(window=20).std()
+df["20sigma_annual"] = df["20sigma"] * math.sqrt(252)
+print(df["20sigma"].tail())
+print(df["20sigma_annual"].tail())
+
+print(df["20sigma"].isna().sum())
+print(df["20sigma"].first_valid_index())
+
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(df["20sigma"])
+ax.set_title("20sigma")
+fig.savefig(Path(__file__).with_name("20sigma.png"))
 plt.show()
 plt.close(fig)
