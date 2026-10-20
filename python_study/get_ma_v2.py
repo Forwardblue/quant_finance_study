@@ -2,12 +2,12 @@ import pandas as pd
 import akshare as ak
 import datetime
 from pathlib import Path
-from datetime import timedelta
+
 
 # 假设股票代码是code，采取adjust复权方式，开始日期start_date
 
 
-def get_df(code, adjust = "qfq", start_date = "20240101"):  # 注意这个函数的前后逻辑，将日期设定为索引后，一定要将其保留下来，不然后续读不到日期。重新读取缓存后，还是要重新设定一遍日期作为索引
+def get_df(code, adjust="qfq", start_date="20240101"):  # 注意这个函数的前后逻辑，将日期设定为索引后，一定要将其保留下来，不然后续读不到日期。重新读取缓存后，还是要重新设定一遍日期作为索引
     csv_path = Path(__file__).with_name(f"{code}_{adjust}_{start_date}.csv")
     today = datetime.date.today()
     print(f"今天是{today}")
@@ -43,7 +43,7 @@ def ma(df, n):
     return df['close'].rolling(window=n).mean()
 
 
-def get_ma(code, adjust = "qfq", start_date = "20240101"):
+def get_ma(code, adjust="qfq", start_date="20240101"):
     df = get_df(code, adjust, start_date)
     windows = [5, 20, 60]
     df1 = pd.DataFrame({'close': df['close']})
@@ -52,11 +52,36 @@ def get_ma(code, adjust = "qfq", start_date = "20240101"):
     return df1
 
 
-result = get_ma("sh600519", "qfq", "20240101")
-print(result.tail())
+result_sh600519 = get_ma("sh600519", "qfq", "20240101")
+print(result_sh600519.tail())
 
-result = get_ma("sz000001", "qfq", "20240101")
-print(result.tail())
+result_sz000001 = get_ma("sz000001", "qfq", "20240101")
+print(result_sz000001.tail())
 
-result = get_ma("sh601318", "qfq", "20240101")
-print(result.tail())
+result_sh601318 = get_ma("sh601318", "qfq", "20240101")
+print(result_sh601318.tail())
+
+s_sh600519 = (result_sh600519["ma5"] > result_sh600519["ma20"]).astype(int)    # 状态
+
+# 以下是两种办法，第一种是底层逻辑，第二种是直接写
+# 第一种
+diff = []
+for i in range(len(s_sh600519)):
+    if i == 0:
+        diff.append(None)
+    else:
+        diff.append(s_sh600519.iloc[i] - s_sh600519.iloc[i - 1])
+
+diff_series = pd.Series(diff, index=s_sh600519.index)
+# 第二种
+cross_sh600519 = s_sh600519.diff()                            # 事件
+
+print(s_sh600519.tail())
+print(diff_series.tail())
+print(cross_sh600519.tail())
+print(s_sh600519.isna().sum())
+print(s_sh600519.first_valid_index())
+print(diff_series.isna().sum())
+print(diff_series.first_valid_index())
+print(cross_sh600519.isna().sum())
+print(cross_sh600519.first_valid_index())
