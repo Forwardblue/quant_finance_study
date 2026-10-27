@@ -53,6 +53,15 @@ def get_ma(code, adjust="qfq", start_date="20240101"):
         df1[f'ma{w}'] = ma(df, w)
     return df1
 
+# 加一列daily_return和一列累计收益率
+def get_daily_return(code, adjust="qfq", start_date="20240101"):
+    df = get_df(code, adjust, start_date)
+    df["daily_return"] = df["close"].pct_change()
+    df["nav"] = (1 + df['daily_return'].fillna(0)).cumprod()
+    return df
+
+
+
 
 result_sh600519 = get_ma("sh600519", "qfq", "20240101")
 print(result_sh600519.tail())
@@ -110,6 +119,12 @@ ax.legend()
 fig.savefig(Path(__file__).with_name("result_sh600519_cross.png"))
 plt.show()
 plt.close(fig)
+
+# 首先统计金叉出现次数，result_sh600519_start[cross_sh600519 == 1]
+cross_count = result_sh600519_start['cross_sh600519'].value_counts()
+print(cross_count)
+# 计算每次金叉后 5 日、10 日的平均收益
+# 把金叉的日期选出来 ：golden_cross_idx(画图的时候已经选出来了)
 
 print(s_sh600519.tail())
 print(diff_series.tail())
