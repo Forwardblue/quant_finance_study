@@ -3,6 +3,8 @@ import akshare as ak
 import datetime
 from pathlib import Path
 
+from matplotlib import pyplot as plt
+
 
 # 假设股票代码是code，采取adjust复权方式，开始日期start_date
 
@@ -62,6 +64,8 @@ result_sh601318 = get_ma("sh601318", "qfq", "20240101")
 print(result_sh601318.tail())
 
 s_sh600519 = (result_sh600519["ma5"] > result_sh600519["ma20"]).astype(int)    # 状态
+# 这里计算的是两列之间的状态，如果ma5大于ma20，则新产生的这列状态就是1
+# 下面才开始计算这列状态的变化情况，即一阶差分
 
 # 以下是两种办法，第一种是底层逻辑，第二种是直接写
 # 第一种
@@ -75,6 +79,26 @@ for i in range(len(s_sh600519)):
 diff_series = pd.Series(diff, index=s_sh600519.index)
 # 第二种
 cross_sh600519 = s_sh600519.diff()                            # 事件
+
+# 自此，这里就完成了对金叉死叉的计算，接下来是画图
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(result_sh600519['close'], label='Close Price', color='blue')
+
+ax.plot(result_sh600519["ma5"], label="MA5", linewidth=1)
+ax.plot(result_sh600519["ma20"], label="MA20", linewidth=1)
+
+golden_cross_idx = result_sh600519[cross_sh600519 == 1].index   # 金叉时间点
+death_cross_idx = result_sh600519[cross_sh600519 == -1].index   # 死叉时间点
+
+ax.scatter(golden_cross_idx, result_sh600519['close'].loc[golden_cross_idx],
+           marker='^', s=100, color='green', label='Golden Cross', zorder=5)
+ax.scatter(death_cross_idx, result_sh600519['close'].loc[death_cross_idx],
+           marker='v', s=100, color='red', label='Death Cross', zorder=5)
+ax.set_title("result_sh600519_cross")
+ax.legend()
+fig.savefig(Path(__file__).with_name("result_sh600519_cross.png"))
+plt.show()
+plt.close(fig)
 
 print(s_sh600519.tail())
 print(diff_series.tail())
