@@ -63,8 +63,19 @@ print(result_sz000001.tail())
 result_sh601318 = get_ma("sh601318", "qfq", "20240101")
 print(result_sh601318.tail())
 
-s_sh600519 = (result_sh600519["ma5"] > result_sh600519["ma20"]).astype(int)    # 状态
+# 第一个"全部都有值"的日期
+cols = ["ma5", "ma20"]
+start = result_sh600519[cols].dropna().index[0]
+result_sh600519_start = result_sh600519.loc[start:]
+
+
+s_sh600519 = (result_sh600519_start["ma5"] > result_sh600519_start["ma20"]).astype(int)    # 状态
 # 这里计算的是两列之间的状态，如果ma5大于ma20，则新产生的这列状态就是1
+# 涉及到的问题是预热期可能会出现ma20第一天有数据，这天正好ma5大于ma20，那这一天其实不算金叉，需要将其隔离出来
+# 如何隔离呢，应该是将预热期结束的第一天忽略掉，也就是照常计算金叉和死叉，但不显示为金叉和死叉
+# 预热期结束应该只会有错误的金叉，不存在出现死叉的情况
+# 在计算金叉和死叉的时候直接将预热期切掉，说这么多，主要是在考虑在代码的哪一步进行切除
+# 在比大小的时候就切
 # 下面才开始计算这列状态的变化情况，即一阶差分
 
 # 以下是两种办法，第一种是底层逻辑，第二种是直接写
@@ -82,17 +93,17 @@ cross_sh600519 = s_sh600519.diff()                            # 事件
 
 # 自此，这里就完成了对金叉死叉的计算，接下来是画图
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.plot(result_sh600519['close'], label='Close Price', color='blue')
+ax.plot(result_sh600519_start['close'], label='Close Price', color='blue')
 
-ax.plot(result_sh600519["ma5"], label="MA5", linewidth=1)
-ax.plot(result_sh600519["ma20"], label="MA20", linewidth=1)
+ax.plot(result_sh600519_start["ma5"], label="MA5", linewidth=1)
+ax.plot(result_sh600519_start["ma20"], label="MA20", linewidth=1)
 
-golden_cross_idx = result_sh600519[cross_sh600519 == 1].index   # 金叉时间点
-death_cross_idx = result_sh600519[cross_sh600519 == -1].index   # 死叉时间点
+golden_cross_idx = result_sh600519_start[cross_sh600519 == 1].index   # 金叉时间点
+death_cross_idx = result_sh600519_start[cross_sh600519 == -1].index   # 死叉时间点
 
-ax.scatter(golden_cross_idx, result_sh600519['close'].loc[golden_cross_idx],
+ax.scatter(golden_cross_idx, result_sh600519_start['close'].loc[golden_cross_idx],
            marker='^', s=100, color='green', label='Golden Cross', zorder=5)
-ax.scatter(death_cross_idx, result_sh600519['close'].loc[death_cross_idx],
+ax.scatter(death_cross_idx, result_sh600519_start['close'].loc[death_cross_idx],
            marker='v', s=100, color='red', label='Death Cross', zorder=5)
 ax.set_title("result_sh600519_cross")
 ax.legend()
