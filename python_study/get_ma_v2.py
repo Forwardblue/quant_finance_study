@@ -69,7 +69,10 @@ plt.close(fig)
 result_sh600519_start["cross"] = cross_sh600519 # 新增几列我需要的数据
 result_sh600519_start["fwd5"] = result_sh600519_start["close"].shift(-5) / result_sh600519_start["close"] - 1
 result_sh600519_start["fwd10"] = result_sh600519_start["close"].shift(-10) / result_sh600519_start["close"] - 1
+result_sh600519_start["s"] = s_sh600519
+result_sh600519_start["pos"] = s_sh600519.shift(1)
 
+print(result_sh600519_start[["close", "ma5", "ma20", "s", "cross", "pos"]].loc["2024-02-05":"2024-02-09"])
 # 计算每次金叉后 5 日、10 日的平均收益
 # 把金叉的日期选出来 ：golden_cross_idx(画图的时候已经选出来了)
 
