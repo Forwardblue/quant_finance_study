@@ -160,3 +160,5 @@ print(f"NaN 个数（第一行没有前一天）: {cross_sh600519.isna().sum()}"
 print(f"第一个有值的日期            : {cross_sh600519.first_valid_index()}")
 print("最后 5 行:")
 print(cross_sh600519.tail())
+
+print(result_sh600519_start["fwd5"].mean() )
