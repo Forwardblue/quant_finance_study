@@ -51,6 +51,8 @@ def get_ma(code, adjust="qfq", start_date="20240101"):
     df1 = pd.DataFrame({'close': df['close']})
     for w in windows:
         df1[f'ma{w}'] = ma(df, w)
+    df1["daily_return"] = df1["close"].pct_change()
+    df1["nav"] = (1 + df1["daily_return"].fillna(0)).cumprod()
     return df1
 
 # 加一列daily_return和一列累计收益率
@@ -63,18 +65,23 @@ def get_daily_return(code, adjust="qfq", start_date="20240101"):
 
 
 
+print("\n===== 取数结果（get_ma 的返回值，最后 5 行）=====")
+
 result_sh600519 = get_ma("sh600519", "qfq", "20240101")
+print("[sh600519 贵州茅台]")
 print(result_sh600519.tail())
 
 result_sz000001 = get_ma("sz000001", "qfq", "20240101")
+print("[sz000001 平安银行]")
 print(result_sz000001.tail())
 
 result_sh601318 = get_ma("sh601318", "qfq", "20240101")
+print("[sh601318 中国平安]")
 print(result_sh601318.tail())
 
 # 第一个"全部都有值"的日期
-cols = ["ma5", "ma20"]
-start = result_sh600519[cols].dropna().index[0]
+cols_ma20 = ["ma5", "ma20"] # 加了后缀 20 ，指明这里的全部都有值的日期是按照ma20来计算的
+start = result_sh600519[cols_ma20].dropna().index[0]
 result_sh600519_start = result_sh600519.loc[start:]
 
 
@@ -121,17 +128,35 @@ plt.show()
 plt.close(fig)
 
 # 首先统计金叉出现次数，result_sh600519_start[cross_sh600519 == 1]
-cross_count = result_sh600519_start['cross_sh600519'].value_counts()
-print(cross_count)
+result_sh600519_start["cross"] = cross_sh600519 # 新增几列我需要的数据
+result_sh600519_start["fwd5"] = result_sh600519_start["close"].shift(-5) / result_sh600519_start["close"] - 1
+result_sh600519_start["fwd10"] = result_sh600519_start["close"].shift(-10) / result_sh600519_start["close"] - 1
+
 # 计算每次金叉后 5 日、10 日的平均收益
 # 把金叉的日期选出来 ：golden_cross_idx(画图的时候已经选出来了)
 
+print("\n===== Day 20：金叉之后到底涨不涨 =====")
+print(f"切点（预热期结束的第一天）: {start.date()}")
+print(f"切完之后的行数            : {len(result_sh600519_start)}")
+print("事件分布（1=金叉，-1=死叉，0=没穿越；NaN 不计数）:")
+print(result_sh600519_start["cross"].value_counts())
+print(f"金叉后 5 个交易日的平均收益 : {result_sh600519_start.loc[result_sh600519_start['cross'] == 1, 'fwd5'].mean():.6f}")
+print(f"金叉后 10 个交易日的平均收益: {result_sh600519_start.loc[result_sh600519_start['cross'] == 1, 'fwd10'].mean():.6f}")
+
+print("\n===== 校验 1：状态列 s（1 = ma5 在 ma20 上方，0 = 下方）=====")
+print(f"NaN 个数（有多少行算不出来）: {s_sh600519.isna().sum()}")
+print(f"第一个有值的日期            : {s_sh600519.first_valid_index()}")
+print("最后 5 行:")
 print(s_sh600519.tail())
+
+print("\n===== 校验 2：事件列 A（手写循环版本）=====")
+print(f"NaN 个数（第一行没有前一天）: {diff_series.isna().sum()}")
+print(f"第一个有值的日期            : {diff_series.first_valid_index()}")
+print("最后 5 行:")
 print(diff_series.tail())
+
+print("\n===== 校验 3：事件列 B（s.diff() 版本）=====")
+print(f"NaN 个数（第一行没有前一天）: {cross_sh600519.isna().sum()}")
+print(f"第一个有值的日期            : {cross_sh600519.first_valid_index()}")
+print("最后 5 行:")
 print(cross_sh600519.tail())
-print(s_sh600519.isna().sum())
-print(s_sh600519.first_valid_index())
-print(diff_series.isna().sum())
-print(diff_series.first_valid_index())
-print(cross_sh600519.isna().sum())
-print(cross_sh600519.first_valid_index())
