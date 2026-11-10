@@ -1,25 +1,7 @@
 import pandas as pd
-import akshare as ak
-import datetime
 from pathlib import Path
-
 from matplotlib import pyplot as plt
-
-
-# 假设股票代码是code，采取adjust复权方式，开始日期start_date
-
-
 from indicators import get_df, get_ma
-
-# 加一列daily_return和一列累计收益率
-def get_daily_return(code, adjust="qfq", start_date="20240101"):
-    df = get_df(code, adjust, start_date)
-    df["daily_return"] = df["close"].pct_change()
-    df["nav"] = (1 + df['daily_return'].fillna(0)).cumprod()
-    return df
-
-
-
 
 print("\n===== 取数结果（get_ma 的返回值，最后 5 行）=====")
 
@@ -117,5 +99,4 @@ print(f"第一个有值的日期            : {cross_sh600519.first_valid_index(
 print("最后 5 行:")
 print(cross_sh600519.tail())
 
-print(result_sh600519_start["fwd5"].mean() )
 print(f"基线（所有 5 日窗口）平均收益: {result_sh600519_start['fwd5'].mean():.6f}")
