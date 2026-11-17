@@ -62,7 +62,7 @@ ax.scatter(death_cross_idx, result_sh600519_start['close'].loc[death_cross_idx],
 ax.set_title("result_sh600519_cross")
 ax.legend()
 fig.savefig(Path(__file__).with_name("result_sh600519_cross.png"))
-plt.show()
+
 plt.close(fig)
 
 # 首先统计金叉出现次数，result_sh600519_start[cross_sh600519 == 1]
@@ -73,6 +73,8 @@ result_sh600519_start["s"] = s_sh600519
 result_sh600519_start["pos"] = s_sh600519.shift(1)
 
 print(result_sh600519_start[["close", "ma5", "ma20", "s", "cross", "pos"]].loc["2024-02-05":"2024-02-09"])
+print(result_sh600519_start[["close", "ma5", "ma20", "s", "cross", "pos"]].head(5))
+print(result_sh600519_start[["close", "ma5", "ma20", "s", "cross", "pos"]].tail(5))
 # 计算每次金叉后 5 日、10 日的平均收益
 # 把金叉的日期选出来 ：golden_cross_idx(画图的时候已经选出来了)
 
@@ -103,3 +105,10 @@ print("最后 5 行:")
 print(cross_sh600519.tail())
 
 print(f"基线（所有 5 日窗口）平均收益: {result_sh600519_start['fwd5'].mean():.6f}")
+
+result_sh600519_start["pos"]=result_sh600519_start["pos"].fillna(0)      # "策略启动前空仓" ← 建议这个
+# Day 23：策略每日收益 = 仓位 × 当天涨跌
+result_sh600519_start["strat_ret"] = result_sh600519_start["pos"] * result_sh600519_start["daily_return"]
+print(result_sh600519_start[["daily_return", "pos", "strat_ret"]].head(8))
+print(f"策略收益为 0 的天数: {(result_sh600519_start['strat_ret'] == 0).sum()} / {len(result_sh600519_start)}")
+print(f"空仓天数: {(result_sh600519_start['pos'] == 0).sum()}")
