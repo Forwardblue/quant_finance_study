@@ -112,3 +112,31 @@ result_sh600519_start["strat_ret"] = result_sh600519_start["pos"] * result_sh600
 print(result_sh600519_start[["daily_return", "pos", "strat_ret"]].head(8))
 print(f"策略收益为 0 的天数: {(result_sh600519_start['strat_ret'] == 0).sum()} / {len(result_sh600519_start)}")
 print(f"空仓天数: {(result_sh600519_start['pos'] == 0).sum()}")
+
+
+n = len(result_sh600519_start)      # → 677，是去除了预热期的，后续要保持一致
+total = (1 + result_sh600519_start["strat_ret"]).prod() - 1  # 策略利润率
+annual = (1 + total) ** (252 / n) - 1 # 策略年化收益率
+bh_total = (1 + result_sh600519_start["daily_return"]).prod() - 1  # 保持持仓不变利润率
+bh_annual = (1 + bh_total) ** (252 / n) - 1 # 保持持仓不变年化收益率
+
+print(f"区间: {result_sh600519_start.index[0].date()} ~ {result_sh600519_start.index[-1].date()}  ({n} 个交易日, {n/252:.2f} 年)")
+print(f"策略总收益    : {total:+.4f}  ({total*100:+.2f}%)")
+print(f"策略年化      : {annual:+.4f}  ({annual*100:+.2f}%)")
+print(f"买入持有总收益: {bh_total:+.4f}  ({bh_total*100:+.2f}%)")
+print(f"买入持有年化  : {bh_annual:+.4f}  ({bh_annual*100:+.2f}%)")
+
+nav = (1 + result_sh600519_start["strat_ret"]).cumprod()  #一块钱买入，每天该策略挣了多少钱，之前还是把这个当成一个数了，而不是一列数。
+dd  = nav / nav.cummax() - 1 # 最后的收益和策略最高点的比较，减1是为了把倍数换成涨跌幅。
+print(f"策略最大回撤：{dd.min():+.4f}") # nav是一列数，dd也是一列数，一开始还以为是一个数。看到min（）才反应过来。这一步是为了看回撤，就是看自己到底会掉多深的坑。
+
+print(f"策略最大回撤日期：{dd.idxmin().date()}")                        # 谷底是哪天
+print(f"策略回撤前挣得最多的那一天：{nav.loc[:dd.idxmin()].idxmax().date()}")     # 谷底之前的最高点（山顶）是哪天
+
+nav_bh = (1 + result_sh600519_start["daily_return"]).cumprod()
+dd_bh  = nav_bh / nav_bh.cummax() - 1
+print(f"保持买入的最大回撤：{dd_bh.min():+.4f}") # 上面这三行是为了和买入持有做对比，是在计算保持买入的值。
+
+dd.plot()
+plt.savefig(Path(__file__).with_name("drawdown.png"))
+plt.close()
