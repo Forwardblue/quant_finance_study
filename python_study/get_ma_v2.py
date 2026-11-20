@@ -4,6 +4,13 @@ from matplotlib import pyplot as plt
 from indicators import get_df, get_ma
 import numpy as np
 
+
+# 设置中文字体（SimHei 黑体，Windows 自带）
+plt.rcParams['font.sans-serif'] = ['SimHei']
+# 解决负号显示异常的问题
+plt.rcParams['axes.unicode_minus'] = False
+
+
 print("\n===== 取数结果（get_ma 的返回值，最后 5 行）=====")
 
 result_sh600519 = get_ma("sh600519", "qfq", "20240101")
@@ -167,3 +174,16 @@ print(f"盈亏比    : {Profit_Loss_Ratio:.3f}   ← 平均盈利 / 平均亏损
 print(f"每笔期望  : {wins_rate * np.mean(wins) + (1 - wins_rate) * np.mean(losses):+.4%}   ← 胜率×平均盈利 + (1-胜率)×平均亏损")
 print(f"盈利因子  : {sum(wins) / abs(sum(losses)):.3f}   ← 总盈利 / 总亏损（另一个指标，别和盈亏比混）")
 
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.plot(nav,    label="MA5/MA20 择时")
+ax.plot(nav_bh, label="买入持有")
+ax.set_title("策略 vs 买入持有（净值，起点 1.0）")
+ax.legend()
+fig.savefig(Path(__file__).with_name("nav_compare.png"))
+plt.close(fig)
+
+print(f"策略最高   {nav.max():.4f} @ {nav.idxmax().date()}")
+print(f"买入持有最高 {nav_bh.max():.4f} @ {nav_bh.idxmax().date()}")
+ratio = nav / nav_bh      # >1 = 策略领先，<1 = 策略落后
+print(f"策略相对最强 {ratio.max():.3f} @ {ratio.idxmax().date()}")
+print(f"策略相对最弱 {ratio.min():.3f} @ {ratio.idxmin().date()}")
