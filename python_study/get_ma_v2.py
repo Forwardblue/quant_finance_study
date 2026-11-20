@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
 from indicators import get_df, get_ma
+import numpy as np
 
 print("\n===== 取数结果（get_ma 的返回值，最后 5 行）=====")
 
@@ -140,3 +141,29 @@ print(f"保持买入的最大回撤：{dd_bh.min():+.4f}") # 上面这三行是�
 dd.plot()
 plt.savefig(Path(__file__).with_name("drawdown.png"))
 plt.close()
+
+# 取出所有金叉日、死叉日
+golden = list(result_sh600519_start.index[result_sh600519_start["cross"] == 1])
+death  = list(result_sh600519_start.index[result_sh600519_start["cross"] == -1])
+
+# 每个金叉配它之后最近的死叉（没有就跳过 = 未平仓）
+trades = []
+for g in golden:
+    after = [d for d in death if d > g]
+    if after:
+        trades.append(result_sh600519_start['close'][after[0]] / result_sh600519_start['close'][g] - 1)
+
+wins   = [x for x in trades if x > 0]
+losses = [x for x in trades if x <= 0]
+wins_rate= len(wins) / len(trades)
+Profit_Loss_Ratio= np.mean(wins) / abs(np.mean(losses))
+
+print("\n===== Day 26：胜率与盈亏比 =====")
+print(f"金叉 {len(golden)} 次，死叉 {len(death)} 次 → 配成 {len(trades)} 笔已平仓（未平仓 {len(golden) - len(trades)} 笔，不计入统计）")
+print(f"胜率      : {len(wins)} / {len(trades)} = {wins_rate:.2%}")
+print(f"平均盈利  : {np.mean(wins):+.4%}   （赢的 {len(wins)} 笔）")
+print(f"平均亏损  : {np.mean(losses):+.4%}   （输的 {len(losses)} 笔）")
+print(f"盈亏比    : {Profit_Loss_Ratio:.3f}   ← 平均盈利 / 平均亏损")
+print(f"每笔期望  : {wins_rate * np.mean(wins) + (1 - wins_rate) * np.mean(losses):+.4%}   ← 胜率×平均盈利 + (1-胜率)×平均亏损")
+print(f"盈利因子  : {sum(wins) / abs(sum(losses)):.3f}   ← 总盈利 / 总亏损（另一个指标，别和盈亏比混）")
+
