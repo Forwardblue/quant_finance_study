@@ -25,3 +25,7 @@ dist/
 # ---- Claude Code ----
 # 本地权限配置，只对这台机器有效，和 .idea/ 一个道理
 .claude/
+
+# ---- Excel 临时锁文件 ----
+# 打开 xlsx 时会生成 ~$xxx.xlsx，不该入库
+~$*
