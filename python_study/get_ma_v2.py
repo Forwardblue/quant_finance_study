@@ -187,3 +187,15 @@ print(f"买入持有最高 {nav_bh.max():.4f} @ {nav_bh.idxmax().date()}")
 ratio = nav / nav_bh      # >1 = 策略领先，<1 = 策略落后
 print(f"策略相对最强 {ratio.max():.3f} @ {ratio.idxmax().date()}")
 print(f"策略相对最弱 {ratio.min():.3f} @ {ratio.idxmin().date()}")
+
+
+cost = result_sh600519_start["pos"].diff().abs().fillna(0) * 0.001   # 第一行没有"前一天"，成本按 0 算
+result_sh600519_start["strat_ret_cost"] = result_sh600519_start["pos"] * result_sh600519_start["daily_return"] - cost
+
+print("\n===== Day 28：加入交易成本（每次买卖扣 0.1%）=====")
+print(f"换手次数            : {int((cost > 0).sum())} 次（每次 0.1%）")
+print(f"成本累计（算术和）  : {cost.sum():.4%}")
+print(f"无成本总收益        : {(1 + result_sh600519_start['strat_ret']).prod() - 1:+.2%}")
+print(f"有成本总收益        : {(1 + result_sh600519_start['strat_ret_cost']).prod() - 1:+.2%}")
+print(f"成本吃掉            : {((1 + result_sh600519_start['strat_ret']).prod() - 1) - ((1 + result_sh600519_start['strat_ret_cost']).prod() - 1):.2%}   ← 净值上的实际差额，不是简单的 4.5%")
+
